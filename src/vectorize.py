@@ -2,15 +2,19 @@ import pandas as pd
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "..." / "data" / "processed" / "clean.csv"
 
 def get_prepared_data():
-    df = pd.read_csv("..\\data\\processed\\clean.csv")
+    df = pd.read_csv(DATA_PATH)
     
     vectorizer = TfidfVectorizer(max_features=1000)
     x_numpy = vectorizer.fit_transform(df["text"].toarray())
     
     label_encoder = LabelEncoder()
-    y_numpy = label_encoder.fit_transform(df["topic"])
+    y_numpy = label_encoder.fit_transform(df["category"])
     
     x_tensor = torch.tensor(x_numpy, dtype=torch.float32)
     y_tensor = torch.tensor(y_numpy, dtype=torch.long)
