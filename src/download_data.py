@@ -1,26 +1,42 @@
 import os
 from pathlib import Path
+
 import pandas as pd
+from datasets import load_dataset
 
 # 1. Создаем папку для сохранения результата
 os.makedirs("data/processed", exist_ok=True)
 
-# 2. Автоматически находим правильный путь к Загрузкам без кириллицы
-downloads_dir = Path.home() / "Downloads"
-path_to_file = downloads_dir / "train-00000-of-00001.parquet"
+# 2. Скачиваем чистый датасет с Hugging Face
+DATASET_NAME = "data-silence/rus_news_classifier"
 
-# Проверяем, существует ли файл перед чтением
-if not path_to_file.exists():
-    raise FileNotFoundError(f"Файл не найден по пути: {path_to_file}")
+# Категории из карточки датасета: числовая метка -> название темы
+categories_translator = {
+    0: "climate",
+    1: "conflicts",
+    2: "culture",
+    3: "economy",
+    4: "gloss",
+    5: "health",
+    6: "politics",
+    7: "science",
+    8: "society",
+    9: "sports",
+    10: "travel",
+}
 
-# 3. Читаем parquet-файл
-print(f"Пытаюсь прочитать файл: {path_to_file}")
-df = pd.read_parquet(path_to_file)
+print(f"Скачиваю датасет: {DATASET_NAME}")
+ds = load_dataset(DATASET_NAME, split="train")
+
+# 3. Переводим в DataFrame и приводим колонки к нужному виду
+df = ds.to_pandas()
+df = df.rename(columns={"news": "text", "labels": "topic"})
+df["topic"] = df["topic"].map(categories_translator)
 
 # 4. Очистка и фильтрация данных
 df = df[["text", "topic"]].dropna()
 
-# Удаляем переносы строк (\n, \r) из самого текста, чтобы Excel не дробил одну строку на несколько
+# Удаляем переносы строк (\n, \r), чтобы Excel не дробил одну строку на несколько
 df["text"] = df["text"].astype(str).str.replace(r"\r+|\n+", " ", regex=True)
 
 # Перемешиваем датасет
