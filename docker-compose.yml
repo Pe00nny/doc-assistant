@@ -1,0 +1,17 @@
+services:
+  rag-service:
+    image: doc-assistant-service:v1
+    container_name: doc-assistant-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - hf_cache:/app/cache/huggingface
+    extra_hosts:
+      - "host.docker.internal:172.23.32.1"
+    restart: always
+
+volumes:
+  hf_cache:
